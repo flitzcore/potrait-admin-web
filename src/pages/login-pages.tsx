@@ -31,12 +31,6 @@ export function LoginForm() {
     setIsSubmitting(true);
     try {
       const response = await axios.post('https://studio-foto-backend.vercel.app/v1/auth/login', data);
-      console.log('Login successful:', response.data);
-      toast({
-        title: "Login successful",
-        description: "You have been successfully logged in",
-      });
-
       // Store tokens
       const { access, refresh } = response.data.tokens;
       localStorage.setItem('accessToken', JSON.stringify(access));

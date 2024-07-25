@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginForm } from "./pages/login-pages";
 import { SignupForm } from "./pages/signup-pages";
+import { HomePage } from './pages/home-page';
 function App() {
   return (
     <main className="flex flex-col items-center justify-center h-screen">
@@ -9,6 +10,7 @@ function App() {
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<LoginForm />} />
           <Route path="/signup" element={<SignupForm />} />
+          <Route path="/dashboard" element={<HomePage />} />
           {/* <Route path="/home" element={<Home />} /> */}
         </Routes>
       </Router>

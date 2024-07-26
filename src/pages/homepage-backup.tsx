@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import Cookies from 'js-cookie';
 import {
     Menu,
@@ -18,7 +18,6 @@ import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { AddPortfolioDialog } from "@/components/AddPortfolioDialog";
 import { Toaster } from "@/components/ui/toaster";
-import { useToast } from '@/components/ui/use-toast';
 
 type Section = 'Portfolio' | 'Service';
 
@@ -28,53 +27,20 @@ interface ImageData {
     imgUrl: string;
     id: string;
 }
-
 interface ServiceData {
     name: string;
     description: string;
     imgUrl: string;
     id: string;
 }
-
 interface MainContentProps {
     selectedSection: Section;
     accessToken: string;
     images: ImageData[];
     services: ServiceData[];
-    fetchImages: () => void; // Add this prop
 }
 
-function MainContent({ selectedSection, accessToken, images, services, fetchImages }: MainContentProps) {
-    const { toast } = useToast();
-    const [isLoading, setIsLoading] = useState(false);
-    const uniqueImages = images.filter((image, index, self) =>
-        index === self.findIndex((img) => img.title === image.title)
-    );
-    const handleDelete = async (imageId: string) => {
-        setIsLoading(true);
-        try {
-            await axios.delete(`https://studio-foto-backend.vercel.app/v1/images/${imageId}`, {
-                headers: {
-                    Authorization: `Bearer ${JSON.parse(accessToken).token}`
-                }
-            });
-            fetchImages(); // Re-fetch images after deletion
-        } catch (error) {
-            let errorMsg = 'An unexpected error occurred';
-            if (error instanceof AxiosError) {
-                errorMsg = error.response?.data.message || error.message;
-            }
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: errorMsg,
-            });
-        }
-        finally {
-            setIsLoading(false);
-        }
-    };
-
+function MainContent({ selectedSection, accessToken, images, services }: MainContentProps) {
     return (
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
             <div className="flex items-center">
@@ -83,7 +49,7 @@ function MainContent({ selectedSection, accessToken, images, services, fetchImag
             {selectedSection === 'Portfolio' ? (
                 images.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 lg:gap-10 2xl:gap-20 p-4">
-                        {uniqueImages.map((image) => (
+                        {images.map((image) => (
                             <div key={image.id} className="flex flex-col items-center justify-center">
                                 <Card className="w-full h-full rounded-lg md:rounded-xl overflow-hidden shadow-lg">
                                     <img
@@ -97,15 +63,12 @@ function MainContent({ selectedSection, accessToken, images, services, fetchImag
                                     <Button
                                         variant="outline"
                                         className="border-black rounded-xl text-sm 2xl:text-lg w-full"
-                                        disabled={isLoading}
                                     >
                                         Edit
                                     </Button>
                                     <Button
                                         variant="outline"
                                         className="border-black rounded-xl 2xl:text-lg w-full"
-                                        disabled={isLoading}
-                                        onClick={() => handleDelete(image.id)}
                                     >
                                         Remove
                                     </Button>
@@ -127,7 +90,16 @@ function MainContent({ selectedSection, accessToken, images, services, fetchImag
                 )
             ) : selectedSection === 'Service' ? (
                 services.length > 0 ? (
-                    <div>service</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 lg:gap-10 2xl:gap-20 p-4">
+                        {services.map((service) => (
+                            <div key={service.id} className="flex flex-col items-center justify-center">
+                                <Card className="w-full h-full rounded-lg md:rounded-xl overflow-hidden shadow-lg">
+                                    <h2 className="text-lg font-semibold">{service.name}</h2>
+                                    <p className="text-sm text-muted-foreground">{service.description}</p>
+                                </Card>
+                            </div>
+                        ))}
+                    </div>
                 ) : (
                     <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm">
                         <div className="flex flex-col items-center gap-1 text-center">
@@ -141,24 +113,29 @@ function MainContent({ selectedSection, accessToken, images, services, fetchImag
                     </div>
                 )
             ) : (
-                <div>no section</div>
-            )}
-            {selectedSection === 'Portfolio' ? (
-                <div className="sticky w-full px-10 py-4 mt-auto bg-white">
-                    <div className="mx-auto">
-                        <AddPortfolioDialog accessToken={accessToken} fetchImages={fetchImages} />
+                <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm">
+                    <div className="flex flex-col items-center gap-1 text-center">
+                        <h3 className="text-2xl font-bold tracking-tight">
+                            No data available for service
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                            Please add data to the service section.
+                        </p>
                     </div>
                 </div>
-            ) : selectedSection === 'Service' ? (
-                null
-            ) : (
-                <div>no section</div>
             )}
-
+            <div className="sticky bottom-0 left-0 w-full px-10 py-4 bg-white">
+                <div className="mx-auto">
+                    <Button className="rounded-full w-full text-lg">
+                        Add Portfolio
+                    </Button>
+                </div>
+            </div>
             <Toaster />
         </main>
     );
 }
+
 
 export function HomePage() {
     const [selectedSection, setSelectedSection] = useState<Section>('Portfolio');
@@ -166,18 +143,6 @@ export function HomePage() {
     const [refreshToken, setRefreshToken] = useState('');
     const [userData, setUserData] = useState('');
     const [images, setImages] = useState<ImageData[]>([]);
-
-
-
-    const fetchImages = () => {
-        axios.get('https://studio-foto-backend.vercel.app/v1/images')
-            .then((response) => {
-                setImages(response.data.results);
-            })
-            .catch((error) => {
-                console.error('Failed to fetch images:', error);
-            });
-    };
 
     useEffect(() => {
         // Retrieve the access token from localStorage
@@ -191,7 +156,14 @@ export function HomePage() {
         setUserData(userData || '');
 
         // Fetch images from the backend
-        fetchImages();
+        axios.get('https://studio-foto-backend.vercel.app/v1/images')
+            .then((response) => {
+                setImages(response.data.results);
+            })
+            .catch((error) => {
+                console.error('Failed to fetch images:', error);
+            });
+        console.log('images:', images);
     }, []);
 
     return (
@@ -205,16 +177,14 @@ export function HomePage() {
                         <nav className="grid items-start px-2 lg:px-4">
                             <Button
                                 variant="link"
-                                className={`flex items-center gap-3 text-lg font-large rounded-lg px-3 py-2 transition-all ${selectedSection === 'Portfolio' ? 'text-secondary' : 'text-secondary opacity-60'
-                                    }`}
+                                className="flex items-center gap-3 text-lg font-large rounded-lg px-3 py-2 text-secondary transition-all hover:text-secondary"
                                 onClick={() => setSelectedSection('Portfolio')}
                             >
                                 Portfolio
                             </Button>
                             <Button
                                 variant="link"
-                                className={`flex items-center gap-3 text-lg font-large rounded-lg px-3 py-2 transition-all ${selectedSection === 'Service' ? 'text-secondary' : 'text-secondary opacity-60'
-                                    }`}
+                                className="flex items-center gap-3 text-lg font-large rounded-lg px-3 py-2 text-secondary transition-all hover:text-secondary"
                                 onClick={() => setSelectedSection('Service')}
                             >
                                 Service
@@ -275,13 +245,7 @@ export function HomePage() {
                         </form>
                     </div> */}
                 </header>
-                <MainContent
-                    selectedSection={selectedSection}
-                    accessToken={accessToken}
-                    images={images}
-                    services={[]}
-                    fetchImages={fetchImages} // Pass the function as a prop
-                />
+                <MainContent selectedSection={selectedSection} accessToken={accessToken} images={images} services={[]} />
             </div>
         </div>
     );

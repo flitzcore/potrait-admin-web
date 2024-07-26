@@ -24,9 +24,10 @@ export interface AddPortfolioFormValues {
 
 export interface AddPortfolioProps {
     accessToken: string;
+    fetchImages: () => void;
 }
 
-export function AddPortfolioDialog({ accessToken }: AddPortfolioProps) {
+export function AddPortfolioDialog({ accessToken, fetchImages }: AddPortfolioProps) {
     const { register, handleSubmit, formState: { errors }, reset } = useForm<AddPortfolioFormValues>();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -46,7 +47,7 @@ export function AddPortfolioDialog({ accessToken }: AddPortfolioProps) {
                     'Authorization': `Bearer ${JSON.parse(accessToken).token}`
                 }
             });
-            console.log('Portfolio item added successfully:', response.data);
+            fetchImages();
             toast({
                 title: "Item added",
                 description: "The portfolio item has been added successfully.",
@@ -76,7 +77,7 @@ export function AddPortfolioDialog({ accessToken }: AddPortfolioProps) {
         <>
             <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <AlertDialogTrigger asChild>
-                    <Button className="mt-4">Add Portfolio Item</Button>
+                    <Button className="mt-4 rounded-full w-full">Add Portfolio Item</Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                     <AlertDialogHeader>

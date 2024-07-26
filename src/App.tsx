@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { LoginForm } from "./pages/login-pages";
 import { SignupForm } from "./pages/signup-pages";
 import { HomePage } from './pages/home-page';
+import { PortfolioDetail } from './pages/portfolio-detail'; // Import the new component
+
 function App() {
   return (
     <main className="flex flex-col items-center justify-center h-screen">
@@ -11,11 +13,10 @@ function App() {
           <Route path="/login" element={<LoginForm />} />
           <Route path="/signup" element={<SignupForm />} />
           <Route path="/dashboard" element={<HomePage />} />
-          {/* <Route path="/home" element={<Home />} /> */}
+          <Route path="/dashboard/portfolio/:id" element={<PortfolioDetail />} /> {/* New route */}
         </Routes>
       </Router>
     </main>
-
   );
 }
 

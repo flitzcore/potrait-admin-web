@@ -16,32 +16,35 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 
-export interface AddPortfolioFormValues {
-    title: string;
-    caption: string;
-    file: FileList;
+export interface EditPortfolioFormValues {
+    title?: string;
+    tag?: string;
+    caption?: string;
+    file?: FileList;
 }
 
-export interface AddPortfolioProps {
+export interface EditPortfolioProps {
     accessToken: string;
     fetchImages: () => void;
+    imageId: string; // Assuming you have an image ID to identify the item to edit
 }
 
-export function AddPortfolioDialog({ accessToken, fetchImages }: AddPortfolioProps) {
-    const { register, handleSubmit, formState: { errors }, reset } = useForm<AddPortfolioFormValues>();
+export function EditPortfolioDialog({ accessToken, fetchImages, imageId }: EditPortfolioProps) {
+    const { register, handleSubmit, formState: { errors }, reset } = useForm<EditPortfolioFormValues>();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const { toast } = useToast();
 
-    const onSubmit: SubmitHandler<AddPortfolioFormValues> = async (data) => {
+    const onSubmit: SubmitHandler<EditPortfolioFormValues> = async (data) => {
         setIsSubmitting(true);
         try {
             const formData = new FormData();
-            formData.append('title', data.title);
-            formData.append('caption', data.caption);
-            formData.append('file', data.file[0]);  // Assuming single file upload
+            if (data.title) formData.append('title', data.title);
+            if (data.tag) formData.append('tag', data.tag);
+            if (data.caption) formData.append('caption', data.caption);
+            if (data.file && data.file.length > 0) formData.append('file', data.file[0]);
 
-            await axios.post('https://studio-foto-backend.vercel.app/v1/images', formData, {
+            await axios.patch(`https://studio-foto-backend.vercel.app/v1/images/${imageId}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     'Authorization': `Bearer ${JSON.parse(accessToken).token}`
@@ -49,12 +52,9 @@ export function AddPortfolioDialog({ accessToken, fetchImages }: AddPortfolioPro
             });
             fetchImages();
             toast({
-                title: "Item added",
-                description: "The portfolio item has been added successfully.",
+                title: "Item updated",
+                description: "The portfolio item has been updated successfully.",
             });
-
-            // // Clear the form data
-
 
         } catch (error) {
             let errorMsg = 'An unexpected error occurred';
@@ -77,13 +77,13 @@ export function AddPortfolioDialog({ accessToken, fetchImages }: AddPortfolioPro
         <>
             <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <AlertDialogTrigger asChild>
-                    <Button className="mt-4 rounded-full w-full text-lg ">Add Portfolio Item</Button>
+                    <Button className="mt-4 rounded-xl w-4/5 text-lg">Edit Portfolio Item</Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Add a new portfolio item</AlertDialogTitle>
+                        <AlertDialogTitle>Edit portfolio item</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Please fill in the details below to add a new portfolio item.
+                            Please update the details below to edit the portfolio item (min 1).
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <form onSubmit={handleSubmit(onSubmit)}>
@@ -95,7 +95,18 @@ export function AddPortfolioDialog({ accessToken, fetchImages }: AddPortfolioPro
                                     type="text"
                                     placeholder="Item title"
                                     disabled={isSubmitting}
-                                    {...register("title", { required: "Title is required" })}
+                                    {...register("title")}
+                                />
+                                {errors.title && <span className="text-red-500">{errors.title.message}</span>}
+                            </div>
+                            <div>
+                                <Label htmlFor="tag">Tag</Label>
+                                <Input
+                                    id="tag"
+                                    type="text"
+                                    placeholder="Item title"
+                                    disabled={isSubmitting}
+                                    {...register("tag")}
                                 />
                                 {errors.title && <span className="text-red-500">{errors.title.message}</span>}
                             </div>
@@ -106,7 +117,7 @@ export function AddPortfolioDialog({ accessToken, fetchImages }: AddPortfolioPro
                                     type="text"
                                     placeholder="Item caption"
                                     disabled={isSubmitting}
-                                    {...register("caption", { required: "Caption is required" })}
+                                    {...register("caption")}
                                 />
                                 {errors.caption && <span className="text-red-500">{errors.caption.message}</span>}
                             </div>
@@ -116,7 +127,7 @@ export function AddPortfolioDialog({ accessToken, fetchImages }: AddPortfolioPro
                                     id="file"
                                     type="file"
                                     disabled={isSubmitting}
-                                    {...register("file", { required: "File is required" })}
+                                    {...register("file")}
                                 />
                                 {errors.file && <span className="text-red-500">{errors.file.message}</span>}
                             </div>
@@ -124,15 +135,12 @@ export function AddPortfolioDialog({ accessToken, fetchImages }: AddPortfolioPro
                         <AlertDialogFooter className='pt-4'>
                             <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
                             <Button type="submit" disabled={isSubmitting}>
-                                {isSubmitting ? "Submitting..." : "Add"}
+                                {isSubmitting ? "Submitting..." : "Update"}
                             </Button>
                         </AlertDialogFooter>
                     </form>
                 </AlertDialogContent>
-
             </AlertDialog>
-
         </>
-
     );
 }

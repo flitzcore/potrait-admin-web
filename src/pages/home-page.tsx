@@ -19,7 +19,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { AddPortfolioDialog } from "@/components/AddPortfolioDialog";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from '@/components/ui/use-toast';
-
+import { useNavigate } from 'react-router-dom';
+import RemoveAllButton from '@/components/RemoveAllButton';
 type Section = 'Portfolio' | 'Service';
 
 interface ImageData {
@@ -47,33 +48,14 @@ interface MainContentProps {
 function MainContent({ selectedSection, accessToken, images, services, fetchImages }: MainContentProps) {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
     const uniqueImages = images.filter((image, index, self) =>
         index === self.findIndex((img) => img.title === image.title)
     );
-    const handleDelete = async (imageId: string) => {
-        setIsLoading(true);
-        try {
-            await axios.delete(`https://studio-foto-backend.vercel.app/v1/images/${imageId}`, {
-                headers: {
-                    Authorization: `Bearer ${JSON.parse(accessToken).token}`
-                }
-            });
-            fetchImages(); // Re-fetch images after deletion
-        } catch (error) {
-            let errorMsg = 'An unexpected error occurred';
-            if (error instanceof AxiosError) {
-                errorMsg = error.response?.data.message || error.message;
-            }
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: errorMsg,
-            });
-        }
-        finally {
-            setIsLoading(false);
-        }
-    };
+
+    const goToEdit = (id: string) => {
+        navigate(`/dashboard/portfolio/${id}`);
+    }
 
     return (
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
@@ -98,17 +80,17 @@ function MainContent({ selectedSection, accessToken, images, services, fetchImag
                                         variant="outline"
                                         className="border-black rounded-xl text-sm 2xl:text-lg w-full"
                                         disabled={isLoading}
+                                        onClick={() => goToEdit(image.id)}
                                     >
-                                        Edit
+                                        &ensp;Edit&ensp;
                                     </Button>
-                                    <Button
-                                        variant="outline"
-                                        className="border-black rounded-xl 2xl:text-lg w-full"
-                                        disabled={isLoading}
-                                        onClick={() => handleDelete(image.id)}
-                                    >
-                                        Remove
-                                    </Button>
+
+                                    <RemoveAllButton
+                                        title={image.title}
+                                        accessToken={accessToken}
+                                        fetchImages={() => fetchImages()}
+                                        isLoading={isLoading}
+                                        setIsLoading={setIsLoading} />
                                 </div>
                             </div>
                         ))}

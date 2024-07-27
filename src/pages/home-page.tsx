@@ -1,20 +1,16 @@
 import { useEffect, useState } from 'react';
 import axios, { AxiosError } from 'axios';
-import Cookies from 'js-cookie';
+
 import {
     Menu,
-    Search
+
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
+
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { AddPortfolioDialog } from "@/components/AddPortfolioDialog";
 import { Toaster } from "@/components/ui/toaster";
@@ -222,8 +218,7 @@ function MainContent({ selectedSection, accessToken, images, services, fetchImag
 export function HomePage() {
     const [selectedSection, setSelectedSection] = useState<Section>('Portfolio');
     const [accessToken, setAccessToken] = useState('');
-    const [refreshToken, setRefreshToken] = useState('');
-    const [userData, setUserData] = useState('');
+
     const [images, setImages] = useState<ImageData[]>([]);
     const [services, setServices] = useState<ServiceData[]>([]);
 
@@ -253,10 +248,10 @@ export function HomePage() {
         setAccessToken(storedAccessToken || '');
 
         // Retrieve the refresh token from cookies
-        const storedRefreshToken = Cookies.get('refreshToken');
-        setRefreshToken(storedRefreshToken || '');
-        const userData = localStorage.getItem('userData');
-        setUserData(userData || '');
+        // const storedRefreshToken = Cookies.get('refreshToken');
+        // setRefreshToken(storedRefreshToken || '');
+        // const userData = localStorage.getItem('userData');
+        // setUserData(userData || '');
 
         // Fetch images from the backend
         fetchImages();

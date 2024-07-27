@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { Button } from "@/components/ui/button"; // Replace with your actual path
-import { Card } from "@/components/ui/card"; // Replace with your actual path
+// Replace with your actual path
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import { useNavigate } from 'react-router-dom';

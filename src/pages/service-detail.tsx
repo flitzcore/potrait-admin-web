@@ -29,7 +29,6 @@ export function ServiceDetail() {
     const navigate = useNavigate();
     const [serviceItem, setServiceItem] = useState<SubServiceData[]>([]);
     const [title, setTitle] = useState('');
-    const [selectedItem, setSelectedItem] = useState<SubServiceData | null>(null);
     const [loading, setLoading] = useState(true);
     const [itemLoading, setItemLoading] = useState(false);
     const [accessToken, setAccessToken] = useState('');
@@ -43,13 +42,6 @@ export function ServiceDetail() {
             // Fetch the service item by ID
             const response = await axios.get(`https://studio-foto-backend.vercel.app/v1/service/${id}/subservice`);
             setServiceItem(response.data);
-
-            // Set selectedItem to the first item if it exists, else set to null
-            if (response.data.length > 0) {
-                setSelectedItem(response.data[0]);
-            } else {
-                setSelectedItem(null);
-            }
         } catch (error) {
             console.error('Failed to fetch service item:', error);
             navigate('/dashboard'); // Navigate to /dashboard in case of error

@@ -21,6 +21,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import RemoveAllButton from '@/components/RemoveAllButton';
+import { AddServiceDialog } from '@/components/AddServiceDialog';
 type Section = 'Portfolio' | 'Service';
 
 interface ImageData {
@@ -31,7 +32,7 @@ interface ImageData {
 }
 
 interface ServiceData {
-    name: string;
+    title: string;
     description: string;
     imgUrl: string;
     id: string;
@@ -42,20 +43,50 @@ interface MainContentProps {
     accessToken: string;
     images: ImageData[];
     services: ServiceData[];
-    fetchImages: () => void; // Add this prop
+    fetchImages: () => void;
+    fetchServices: () => void;
 }
 
-function MainContent({ selectedSection, accessToken, images, services, fetchImages }: MainContentProps) {
-    const { toast } = useToast();
+function MainContent({ selectedSection, accessToken, images, services, fetchImages, fetchServices }: MainContentProps) {
+
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const { toast } = useToast();
     const uniqueImages = images.filter((image, index, self) =>
         index === self.findIndex((img) => img.title === image.title)
     );
+    const uniqueServices = services.filter((service, index, self) =>
+        index === self.findIndex((srv) => srv.title === service.title)
+    );
 
-    const goToEdit = (id: string) => {
+    const goToPortfolioEdit = (id: string) => {
         navigate(`/dashboard/portfolio/${id}`);
     }
+    const goToServiceEdit = (id: string) => {
+        navigate(`/dashboard/service/${id}`);
+    }
+    const deleteService = async (id: string) => {
+        setIsLoading(true);
+        try {
+
+            await axios.delete(`https://studio-foto-backend.vercel.app/v1/service/${id}`);
+            // Set selectedItem to the first item if it exists, else set to null
+            fetchServices();
+
+        } catch (error) {
+            let errorMsg = 'An unexpected error occurred';
+            if (error instanceof AxiosError) {
+                errorMsg = error.response?.data.message || error.message;
+            }
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: errorMsg,
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
@@ -80,7 +111,7 @@ function MainContent({ selectedSection, accessToken, images, services, fetchImag
                                         variant="outline"
                                         className="border-black rounded-xl text-sm 2xl:text-lg w-full"
                                         disabled={isLoading}
-                                        onClick={() => goToEdit(image.id)}
+                                        onClick={() => goToPortfolioEdit(image.id)}
                                     >
                                         &ensp;Edit&ensp;
                                     </Button>
@@ -109,7 +140,38 @@ function MainContent({ selectedSection, accessToken, images, services, fetchImag
                 )
             ) : selectedSection === 'Service' ? (
                 services.length > 0 ? (
-                    <div>service</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 lg:gap-10 2xl:gap-20 p-4">
+                        {uniqueServices.map((service) => (
+                            <div key={service.id} className="flex flex-col items-center justify-center p-4 border rounded-lg shadow-lg">
+                                <div className="image-wrapper mb-4">
+                                    <img
+                                        src={service.imgUrl}
+                                        alt={service.title}
+                                        className="rounded-full w-24 h-24 object-cover"
+                                    />
+                                </div>
+                                <h2 className="text-lg font-bold mb-1">{service.title}</h2>
+                                <p className="text-center mb-4 text-sm text-gray-600">{service.description}</p>
+
+                                <Button
+
+                                    className="w-full text-lg"
+                                    onClick={() => goToServiceEdit(service.id)}
+                                    disabled={isLoading}
+                                >
+                                    Edit
+                                </Button>
+                                <Button
+                                    variant={'destructive'}
+                                    className="w-full text-lg mt-2"
+                                    disabled={isLoading}
+                                    onClick={() => deleteService(service.id)}
+                                >
+                                    Remove
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
                 ) : (
                     <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm">
                         <div className="flex flex-col items-center gap-1 text-center">
@@ -123,7 +185,16 @@ function MainContent({ selectedSection, accessToken, images, services, fetchImag
                     </div>
                 )
             ) : (
-                <div>no section</div>
+                <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm">
+                    <div className="flex flex-col items-center gap-1 text-center">
+                        <h3 className="text-2xl font-bold tracking-tight">
+                            No services available
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                            Please add services to the Service section.
+                        </p>
+                    </div>
+                </div>
             )}
             {selectedSection === 'Portfolio' ? (
                 <div className="sticky w-full px-10 py-4 mt-auto bg-white">
@@ -132,7 +203,13 @@ function MainContent({ selectedSection, accessToken, images, services, fetchImag
                     </div>
                 </div>
             ) : selectedSection === 'Service' ? (
-                null
+                <div className="sticky w-full px-10 py-4 mt-auto bg-white">
+                    <div className="mx-auto">
+                        <AddServiceDialog accessToken={accessToken} fetchServices={fetchServices} />
+                    </div>
+                </div>
+
+
             ) : (
                 <div>no section</div>
             )}
@@ -148,7 +225,7 @@ export function HomePage() {
     const [refreshToken, setRefreshToken] = useState('');
     const [userData, setUserData] = useState('');
     const [images, setImages] = useState<ImageData[]>([]);
-
+    const [services, setServices] = useState<ServiceData[]>([]);
 
 
     const fetchImages = () => {
@@ -158,6 +235,15 @@ export function HomePage() {
             })
             .catch((error) => {
                 console.error('Failed to fetch images:', error);
+            });
+    };
+    const fetchServices = () => {
+        axios.get('https://studio-foto-backend.vercel.app/v1/service')
+            .then((response) => {
+                setServices(response.data.results);
+            })
+            .catch((error) => {
+                console.error('Failed to fetch services:', error);
             });
     };
 
@@ -174,6 +260,7 @@ export function HomePage() {
 
         // Fetch images from the backend
         fetchImages();
+        fetchServices();
     }, []);
 
     return (
@@ -261,7 +348,8 @@ export function HomePage() {
                     selectedSection={selectedSection}
                     accessToken={accessToken}
                     images={images}
-                    services={[]}
+                    services={services}
+                    fetchServices={fetchServices}
                     fetchImages={fetchImages} // Pass the function as a prop
                 />
             </div>

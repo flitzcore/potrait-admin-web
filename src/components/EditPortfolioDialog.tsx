@@ -104,7 +104,7 @@ export function EditPortfolioDialog({ accessToken, fetchImages, imageId }: EditP
                                 <Input
                                     id="tag"
                                     type="text"
-                                    placeholder="Item title"
+                                    placeholder="Item tag"
                                     disabled={isSubmitting}
                                     {...register("tag")}
                                 />

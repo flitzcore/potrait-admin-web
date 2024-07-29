@@ -19,6 +19,7 @@ import { useToast } from '@/components/ui/use-toast';
 export interface AddPortfolioFormValues {
     title: string;
     caption: string;
+    tag: string;
     file: FileList;
 }
 
@@ -39,6 +40,7 @@ export function AddPortfolioDialog({ accessToken, fetchImages }: AddPortfolioPro
             const formData = new FormData();
             formData.append('title', data.title);
             formData.append('caption', data.caption);
+            formData.append('tag', data.tag);
             formData.append('file', data.file[0]);  // Assuming single file upload
 
             await axios.post('https://studio-foto-backend.vercel.app/v1/images', formData, {
@@ -109,6 +111,17 @@ export function AddPortfolioDialog({ accessToken, fetchImages }: AddPortfolioPro
                                     {...register("caption", { required: "Caption is required" })}
                                 />
                                 {errors.caption && <span className="text-red-500">{errors.caption.message}</span>}
+                            </div>
+                            <div>
+                                <Label htmlFor="tag">Tag</Label>
+                                <Input
+                                    id="tag"
+                                    type="text"
+                                    placeholder="Item tag"
+                                    disabled={isSubmitting}
+                                    {...register("tag")}
+                                />
+                                {errors.title && <span className="text-red-500">{errors.title.message}</span>}
                             </div>
                             <div>
                                 <Label htmlFor="file">File</Label>
